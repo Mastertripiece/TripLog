@@ -461,21 +461,48 @@ function initMap(){
 }
 
 /* ============ Flight ============ */
-function startFlight(){
-  if(!currentUser){ alert('여권 이름을 먼저 저장하세요.'); return; }
-  const toC=(elToCountry.value||'').trim();
-  if(!toC){ alert('도착 국가를 입력하세요.'); return; }
+function startFlight(from, to, user){
+  isFlying = true;
 
-  stopWandering(); unlockBounds();
+  // ✈️ 비행기 이모지 아이콘
+  const planeIcon = L.divIcon({
+    html:'✈️', className:'', iconSize:[34,34]
+  });
 
-  const from = AIRPORTS["대한민국"].find(a=>a.code===elFromAirport.value) || AIRPORTS["대한민국"][0];
-  let destCoord, airportLabel='';
-  const toAirportCode = elToAirport.value;
+  // 기존 비행기 마커 제거
+  if(planeMarker) map.removeLayer(planeMarker);
 
-  if(toAirportCode && AIRPORTS[toC]){
-    const ap = AIRPORTS[toC].find(a=>a.code===toAirportCode);
-    if(ap){ destCoord=[ap.lat, ap.lng]; airportLabel=`${toC} ${ap.name}`; }
+  // 시작 위치에 마커 추가
+  planeMarker = L.marker(from, {icon:planeIcon, interactive:false}).addTo(map);
+
+  // 애니메이션 시작
+  const duration = 15000; // 15초
+  const startTime = performance.now();
+
+  function step(now){
+    const t = Math.min((now-startTime)/duration, 1); // 0 → 1
+    const lat = from[0] + (to[0]-from[0])*t;
+    const lng = from[1] + (to[1]-from[1])*t;
+
+    // 비행기 위치 업데이트
+    planeMarker.setLatLng([lat, lng]);
+
+    // 지도도 조금씩 클로즈업
+    map.setView([lat, lng], 3 + t*4); // 줌 레벨 점점 확대
+
+    if(t < 1){
+      requestAnimationFrame(step);
+    } else {
+      // 도착 처리
+      isFlying = false;
+      regionPanel.style.display = 'block';
+      incFlight(user); // 비행 횟수 기록
+      toast("도착! 추억을 등록해보세요.");
+    }
   }
+
+  requestAnimationFrame(step);
+}
   if(!destCoord){ destCoord = COUNTRY_CENTERS[toC] || COUNTRY_CENTERS["대한민국"]; airportLabel=`${toC} 중심`; }
 
   switchToMap();
