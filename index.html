@@ -450,12 +450,14 @@ function show(id){
   $(id).classList.add("active");
 }
 
-$("#btnStart").onclick = ()=>{
-  $("#today").textContent = new Date().toLocaleDateString("ko-KR");
-  $("#ticket-name").textContent = (localStorage.getItem("passportName")||"이름 미입력");
-  loadPassport();
-  show("#pt");
-};
+document.addEventListener("DOMContentLoaded", ()=>{
+  $("#btnStart").onclick = ()=>{
+    $("#today").textContent = new Date().toLocaleDateString("ko-KR");
+    $("#ticket-name").textContent = (localStorage.getItem("passportName")||"이름 미입력");
+    loadPassport();
+    show("#pt");
+  };
+});
 
 $("#btnRegPass").onclick = ()=>{
   const name = $("#inp-name").value.trim();
